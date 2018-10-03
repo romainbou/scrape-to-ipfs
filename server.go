@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	IpfsApi "github.com/ipfs/go-ipfs-api"
 )
 
 func main() {
@@ -26,7 +28,7 @@ func main() {
 		argHandler(c)
 	})
 
-	r.Run(":8080")
+	r.Run(":8000")
 }
 
 func indexHandler(c *gin.Context) {
@@ -50,7 +52,7 @@ func argHandler(c *gin.Context) {
 	trimmedURL := url[1:]
 	log.Print("call is valid: ", trimmedURL)
 	if isValidHTTPURL(trimmedURL) {
-		log.Print("cqll scape qnd server", trimmedURL)
+		log.Print("call scape and server", trimmedURL)
 		srapeAndServe(trimmedURL, c)
 	} else {
 		indexHandler(c)
@@ -61,7 +63,12 @@ func srapeAndServe(url string, c *gin.Context) {
 	log.Print("scrape")
 	filename := scrape(url)
 	log.Print("finished scrapting")
-	serveFile(filename, c)
+
+	hash := addFileToIPFS(filename)
+
+	redirectToGateway(hash, c)
+
+	// serveFile(filename, c)
 }
 
 func scrape(url string) string {
@@ -114,4 +121,23 @@ func isValidHTTPURL(rawURL string) bool {
 	} else {
 		return false
 	}
+}
+
+func redirectToGateway(hash string, c *gin.Context) {
+	c.Redirect(http.StatusMovedPermanently, "https://gateway.ipfs.io/ipfs/"+hash)
+}
+
+func addFileToIPFS(filename string) string {
+	ipfsClient := IpfsApi.NewShell("localhost:5001")
+	file, err := ioutil.ReadFile(filename)
+	reader := bytes.NewReader(file)
+	hash, err := ipfsClient.Add(reader)
+	if err != nil {
+		panic(err)
+	}
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("added", hash)
+	return hash
 }
