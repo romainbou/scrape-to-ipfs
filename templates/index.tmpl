@@ -7,11 +7,31 @@
 			{{ .title }}
 		</h1>
 		<form action="/" method="get">
-			<input type="text" name="{{ .URLParam }}" />
-			<input type="submit" />
+			<input class="url-input" type="text" name="{{ .URLParam }}" />
+			<input class="submit button" type="submit" value="Submit" />
 		</form>
 		<scrip>
 
 		</scrip>
 	</body>
+	<style>
+
+body {
+	text-align: center;
+}
+
+.url-input {
+	width: 500px;
+	display: block;
+	height: 40px;
+	font-size: 14px;
+	margin: auto;
+
+}
+
+.submit {
+	margin: 20px;
+}
+
+	</style>
 </html>

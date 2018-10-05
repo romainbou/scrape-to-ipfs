@@ -42,7 +42,7 @@ func indexHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{
-		"title":    "Wikipedia Scaper",
+		"title":    "IPFS forwarder",
 		"URLParam": URLParam,
 	})
 }
