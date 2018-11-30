@@ -3,12 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +16,8 @@ import (
 func main() {
 
 	r := gin.Default()
-	//r.LoadHTMLFiles("templates/template1.html", "templates/template2.html")
+
 	r.LoadHTMLGlob("templates/*")
-	// r.GET("/", func(c *gin.Context) {
-	// 	indexHandler(c)
-	// })
 
 	r.GET("/*trail", func(c *gin.Context) {
 		argHandler(c)
@@ -72,28 +67,33 @@ func srapeAndServe(url string, c *gin.Context) {
 }
 
 func scrape(url string) string {
-	outputFilename := "output.html"
-
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer response.Body.Close()
 
-	// Create output file
-	outFile, err := os.Create(outputFilename)
+	if response.StatusCode != http.StatusOK {
+		bodyBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bodyString := string(bodyBytes)
+		log.Fatal(bodyString)
+	}
+
+	// TODO detect if it's a web page to recursively scape the assets and replace the links with IPFS
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer outFile.Close()
 
-	// Copy data from HTTP response to file
-	_, err = io.Copy(outFile, response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+	bodyString := string(bodyBytes)
 
-	return outputFilename
+	return bodyString
 }
 
 func serveFile(filename string, c *gin.Context) {
@@ -127,10 +127,9 @@ func redirectToGateway(hash string, c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, "https://gateway.ipfs.io/ipfs/"+hash)
 }
 
-func addFileToIPFS(filename string) string {
+func addFileToIPFS(content string) string {
 	ipfsClient := IpfsApi.NewShell("localhost:5001")
-	file, err := ioutil.ReadFile(filename)
-	reader := bytes.NewReader(file)
+	reader := strings.NewReader(content)
 	hash, err := ipfsClient.Add(reader)
 	if err != nil {
 		panic(err)
