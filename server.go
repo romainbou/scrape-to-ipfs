@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,12 @@ func main() {
 		argHandler(c)
 	})
 
-	r.Run(":8000")
+	if port, ok := os.LookupEnv("PORT"); ok {
+		r.Run(":" + port)
+	} else {
+		r.Run(":8000")
+	}
+
 }
 
 func indexHandler(c *gin.Context) {
@@ -124,11 +130,19 @@ func isValidHTTPURL(rawURL string) bool {
 }
 
 func redirectToGateway(hash string, c *gin.Context) {
-	c.Redirect(http.StatusMovedPermanently, "https://gateway.ipfs.io/ipfs/"+hash)
+	if gatewayURL, ok := os.LookupEnv("GATEWAY_URL"); ok {
+		c.Redirect(http.StatusMovedPermanently, gatewayURL+hash)
+	} else {
+		c.Redirect(http.StatusMovedPermanently, "https://gateway.ipfs.io/ipfs/"+hash)
+	}
 }
 
 func addFileToIPFS(content string) string {
+
 	ipfsClient := IpfsApi.NewShell("localhost:5001")
+	if ipfsDaemonURL, ok := os.LookupEnv("IPFS_DAEMON"); ok {
+		ipfsClient = IpfsApi.NewShell(ipfsDaemonURL)
+	}
 	reader := strings.NewReader(content)
 	hash, err := ipfsClient.Add(reader)
 	if err != nil {
