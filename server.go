@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	IpfsApi "github.com/ipfs/go-ipfs-api"
+
+	Scraper "github.com/romainbou/scrape-to-ipfs/lib"
+	Validator "github.com/romainbou/scrape-to-ipfs/lib"
 )
 
 func main() {
@@ -38,7 +40,9 @@ func indexHandler(c *gin.Context) {
 
 	url := c.DefaultQuery(URLParam, "")
 
-	if isValidHTTPURL(url) {
+	// TODO: Warn if the IPFS server is unavailable
+
+	if Validator.IsValidHTTPURL(url) {
 		srapeAndServe(url, c)
 	}
 
@@ -52,7 +56,7 @@ func argHandler(c *gin.Context) {
 	url := c.Param("trail")
 	trimmedURL := url[1:]
 	log.Print("call is valid: ", trimmedURL)
-	if isValidHTTPURL(trimmedURL) {
+	if Validator.IsValidHTTPURL(trimmedURL) {
 		log.Print("call scape and server", trimmedURL)
 		srapeAndServe(trimmedURL, c)
 	} else {
@@ -62,7 +66,7 @@ func argHandler(c *gin.Context) {
 
 func srapeAndServe(url string, c *gin.Context) {
 	log.Print("scrape")
-	filename := scrape(url)
+	filename := Scraper.Scrape(url)
 	log.Print("finished scrapting")
 
 	hash := addFileToIPFS(filename)
@@ -70,36 +74,6 @@ func srapeAndServe(url string, c *gin.Context) {
 	redirectToGateway(hash, c)
 
 	// serveFile(filename, c)
-}
-
-func scrape(url string) string {
-	response, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		bodyString := string(bodyBytes)
-		log.Fatal(bodyString)
-	}
-
-	// TODO detect if it's a web page to recursively scape the assets and replace the links with IPFS
-
-	bodyBytes, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bodyString := string(bodyBytes)
-
-	return bodyString
 }
 
 func serveFile(filename string, c *gin.Context) {
@@ -115,18 +89,6 @@ func serveFile(filename string, c *gin.Context) {
 
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)
 
-}
-
-func isValidHTTPURL(rawURL string) bool {
-	URL, err := url.ParseRequestURI(rawURL)
-	if err != nil {
-		log.Print(err)
-		return false
-	} else if strings.HasPrefix(URL.Scheme, "http") {
-		return true
-	} else {
-		return false
-	}
 }
 
 func redirectToGateway(hash string, c *gin.Context) {

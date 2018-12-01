@@ -12,6 +12,7 @@ Scapes a static web pages and automatically push and serve them via IPFS
 
 ## TODO
 
-[] Scrape a page on request and replace or save all relative URLs
-[] Push the files to an IPFS daemon
-[] Redirect to an IPFS gateway
+- [ ] Scrape a page on request and replace or save all relative URLs
+- [ ] Push the files to an IPFS daemon
+- [x] Redirect to an IPFS gateway
+- [ ] Publish the result to IPNS
