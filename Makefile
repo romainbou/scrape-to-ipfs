@@ -1,4 +1,5 @@
 VERSION         :=      $(shell cat ./VERSION)
+PWD 			:=		$(shell pwd)
 
 all: install
 
@@ -16,6 +17,9 @@ fmt:
 
 image:
 	docker build -t romainbou/scrape-to-ipfs .
+
+docker-run:
+	docker run -v $(PWD)/templates:/tmpl --env TEMPLATES=/tmpl/ romainbou/scrape-to-ipfs
 
 release:
 	git tag -a $(VERSION) -m "Release" || true

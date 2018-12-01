@@ -7,8 +7,9 @@ Scapes a static web pages and automatically push and serve them via IPFS
 |  Env        | Default                       |  Description          |
 |-------------|-------------------------------|-----------------------|
 | PORT        | 8000                          | Server listening port |
-| GATEWAY_URL | https://gateway.ipfs.io/ipfs/ |  IPFS HTTPS Gateway   |
+| GATEWAY_URL | https://gateway.ipfs.io/ipfs/ | IPFS HTTPS Gateway    |
 | IPFS_DAEMON | localhost:5001                | IPFS daemon address   |
+| TEMPLATES   | templates/                    | Templates folder      |
 
 ## TODO
 

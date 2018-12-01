@@ -20,7 +20,12 @@ func main() {
 
 	r := gin.Default()
 
-	r.LoadHTMLGlob("templates/*")
+	templatesFolder := "templates/"
+	if tplFolder, ok := os.LookupEnv("TEMPLATES"); ok {
+		templatesFolder = tplFolder
+	}
+
+	r.LoadHTMLGlob(templatesFolder + "*")
 
 	r.GET("/*trail", func(c *gin.Context) {
 		argHandler(c)
