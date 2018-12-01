@@ -2,6 +2,19 @@
 
 Scapes a static web pages and automatically push and serve them via IPFS
 
+## Build and run with Docker
+
+ ```bash
+ make image
+ make run-docker
+ ```
+
+## Test
+
+ ```bash
+ make test
+ ```
+
 ## Environement variables
 
 |  Env        | Default                       |  Description          |
