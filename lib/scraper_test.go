@@ -8,9 +8,12 @@ import (
 func TestScrape(t *testing.T) {
 
 	helloURL := "https://ipfs.io/ipfs/QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx"
-	content := Scrape(helloURL)
+	content, allLinks := Scrape(helloURL)
 	if content != "hello worlds\n" {
 		t.Errorf("URL: %s should contains 'hello worlds\\n', received: %s", helloURL, content)
+	}
+	if len(allLinks) != 0 {
+		t.Errorf("URL: %s should contains 0 links received: %d", helloURL, len(allLinks))
 	}
 
 }

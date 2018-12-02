@@ -1,7 +1,7 @@
 VERSION         :=      $(shell cat ./VERSION)
 PWD 			:=		$(shell pwd)
 
-all: install
+all: test
 
 install:
 	go install -v

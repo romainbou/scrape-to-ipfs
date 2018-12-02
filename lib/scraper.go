@@ -11,7 +11,7 @@ import (
 )
 
 // Scrape downloads the content of the given URL and returns it as a string
-func Scrape(url string) string {
+func Scrape(url string) (string, []string) {
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -19,7 +19,10 @@ func Scrape(url string) string {
 
 	defer response.Body.Close()
 
+	allLinks := []string{}
+
 	if response.StatusCode != http.StatusOK {
+		allLinks = findLinkedAsset(response.Body)
 		bodyBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			log.Fatal(err)
@@ -42,7 +45,7 @@ func Scrape(url string) string {
 	// Add all of them to IPFS
 	// Replace them with the Gateway link
 
-	return bodyString
+	return bodyString, allLinks
 }
 
 func getTokenLink(token html.Token) (linkValue string, err error) {

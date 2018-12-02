@@ -71,14 +71,17 @@ func argHandler(c *gin.Context) {
 
 func srapeAndServe(url string, c *gin.Context) {
 	log.Print("scrape")
-	filename := Scraper.Scrape(url)
+	main, allLinks := Scraper.Scrape(url)
+
 	log.Print("finished scrapting")
 
-	hash := addFileToIPFS(filename)
+	for _, link := range allLinks {
+		addFileToIPFS(link)
+	}
+
+	hash := addFileToIPFS(main)
 
 	redirectToGateway(hash, c)
-
-	// serveFile(filename, c)
 }
 
 func serveFile(filename string, c *gin.Context) {
