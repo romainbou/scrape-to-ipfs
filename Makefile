@@ -1,10 +1,10 @@
 VERSION         :=      $(shell cat ./VERSION)
 PWD 			:=		$(shell pwd)
 
-all: test
+all: install test
 
 install:
-	go install -v
+	go get -t -v ./...
 
 run:
 	go run server.go
