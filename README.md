@@ -1,6 +1,7 @@
 # Static page to IPFS gateway
 
 [![Build Status](https://travis-ci.org/romainbou/scrape-to-ipfs.svg?branch=master)](https://travis-ci.org/romainbou/scrape-to-ipfs)
+[![Go Report Card](https://goreportcard.com/badge/github.com/romainbou/scrape-to-ipfs)](https://goreportcard.com/report/github.com/romainbou/scrape-to-ipfs)
 
 Scapes a static web pages and automatically push and serve them via IPFS
 
