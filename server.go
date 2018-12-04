@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -69,19 +70,33 @@ func argHandler(c *gin.Context) {
 	}
 }
 
-func srapeAndServe(url string, c *gin.Context) {
+func srapeAndServe(URL string, c *gin.Context) {
 	log.Print("scrape")
-	main, allLinks := Scraper.Scrape(url)
+
+	u, err := url.Parse(URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	baseURL := u.Scheme + "://" + u.Host + "/"
+	main, allLinks := Scraper.Scrape(URL, 1)
 
 	log.Print("finished scrapting")
 
+	linkHashes := []string{}
 	for _, link := range allLinks {
-		addFileToIPFS(link)
+		fmt.Println("Link: ", Scraper.PrependBaseURL(link, baseURL))
+		fmt.Println("Link: ", link)
+		linkContent, _ := Scraper.Scrape(Scraper.PrependBaseURL(link, baseURL), 2)
+		hash := addFileToIPFS(linkContent)
+		linkHashes = append(linkHashes, hash)
 	}
 
-	hash := addFileToIPFS(main)
+	replacedMain := Scraper.ReplaceLinks(main, allLinks, linkHashes)
+
+	hash := addFileToIPFS(replacedMain)
 
 	redirectToGateway(hash, c)
+	return
 }
 
 func serveFile(filename string, c *gin.Context) {
@@ -101,10 +116,11 @@ func serveFile(filename string, c *gin.Context) {
 
 func redirectToGateway(hash string, c *gin.Context) {
 	if gatewayURL, ok := os.LookupEnv("GATEWAY_URL"); ok {
-		c.Redirect(http.StatusMovedPermanently, gatewayURL+hash)
+		c.Redirect(http.StatusTemporaryRedirect, gatewayURL+hash)
 	} else {
-		c.Redirect(http.StatusMovedPermanently, "https://gateway.ipfs.io/ipfs/"+hash)
+		c.Redirect(http.StatusTemporaryRedirect, "https://gateway.ipfs.io/ipfs/"+hash)
 	}
+	return
 }
 
 func addFileToIPFS(content string) string {
