@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -93,17 +94,15 @@ func srapeAndServe(URL string, c *gin.Context) {
 
 	replacedMain := Scraper.ReplaceLinks(main, allLinks, linkHashes)
 
-	hash := addFileToIPFS(replacedMain)
+	reader := strings.NewReader(replacedMain)
+	hash := addFileToIPFS(reader)
 
 	redirectToGateway(hash, c)
 	return
 }
 
 func serveFile(filename string, c *gin.Context) {
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		// c.JSON(404, gin.H{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
-	}
+	file, _ := ioutil.ReadFile(filename)
 	reader := bytes.NewReader(file)
 	contentLength := int64(len(file))
 	contentType := "text/html;"
@@ -123,13 +122,12 @@ func redirectToGateway(hash string, c *gin.Context) {
 	return
 }
 
-func addFileToIPFS(content string) string {
+func addFileToIPFS(reader io.Reader) string {
 
 	ipfsClient := IpfsApi.NewShell("localhost:5001")
 	if ipfsDaemonURL, ok := os.LookupEnv("IPFS_DAEMON"); ok {
 		ipfsClient = IpfsApi.NewShell(ipfsDaemonURL)
 	}
-	reader := strings.NewReader(content)
 	hash, err := ipfsClient.Add(reader)
 	if err != nil {
 		panic(err)

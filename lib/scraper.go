@@ -15,17 +15,15 @@ import (
 )
 
 // Scrape downloads the content of the given URL and returns it as a string
-func Scrape(URL string, depth int) (string, []string) {
+func Scrape(URL string, depth int) (io.Reader, []string) {
 	response, err := http.Get(URL)
 	allLinks := []string{}
 	if err != nil {
 		if depth == 1 {
 			log.Fatal(err)
 		}
-		return "", allLinks
+		return nil, allLinks
 	}
-
-	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(response.Body)
@@ -36,35 +34,31 @@ func Scrape(URL string, depth int) (string, []string) {
 		if depth == 1 {
 			log.Fatal(bodyString)
 		}
-		return "", allLinks
+		return nil, allLinks
 	}
 
 	bodyReader := response.Body
-	var buf bytes.Buffer
-	tee := io.TeeReader(bodyReader, &buf)
 
-	bodyBytes, err := ioutil.ReadAll(tee)
 	if depth == 1 {
-		allLinks = findLinkedAsset(&buf)
+		var buf bytes.Buffer
+		tee := io.TeeReader(bodyReader, &buf)
+		allLinks = findLinkedAsset(tee)
+		return &buf, allLinks
 	}
+	return bodyReader, allLinks
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bodyString := string(bodyBytes)
-
-	if len(bodyString) == 0 {
-		log.Fatal("The received body is empty")
-	}
-
-	return bodyString, allLinks
 }
 
 // ReplaceLinks replaces the links by their hash in the content
-func ReplaceLinks(content string, links []string, hashes []string) string {
+func ReplaceLinks(reader io.Reader, links []string, hashes []string) string {
 
 	gatewayURL := "https://gateway.ipfs.io/ipfs/"
+
+	bodyBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	content := string(bodyBytes)
 
 	for key, link := range links {
 		fmt.Println("Replace ", link)
